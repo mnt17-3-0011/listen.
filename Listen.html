@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Listen.</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap">
+<style>
+:root{--bg:#000;--fg:#dcdcdc;--dim:#6f6f6f;--line:#2b2b2b;--ok:#fff;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.7 "Courier Prime","Courier New",monospace}
+body::before{content:"17";position:fixed;right:-4vw;bottom:-12vw;font-size:46vw;font-weight:700;line-height:1;color:#0a0a0a;pointer-events:none;z-index:0;animation:br 14s ease-in-out infinite}
+@keyframes br{50%{color:#121212}}
+main{position:relative;z-index:1;max-width:60ch;margin:0 auto;padding:12vh 1.5rem 22vh}
+h1{font-size:2.2rem;margin:0 0 1.5rem}
+p{margin:0 0 1.2rem}
+.dim{color:var(--dim)}
+.stage{margin-top:4rem;padding:0 0 0 1.2rem;border-left:1px solid var(--line)}
+.stage[hidden]{display:none}
+pre{margin:1.4rem 0;font:inherit;font-size:1.15rem;white-space:pre-wrap;word-break:break-word;letter-spacing:.1em;color:var(--ok)}
+.row{display:flex;gap:.75rem;margin-top:1.4rem;flex-wrap:wrap}
+input{flex:1 1 14rem;background:transparent;border:1px solid var(--line);color:var(--fg);font:inherit;padding:.6rem .8rem;border-radius:0}
+button{background:var(--fg);color:var(--bg);border:0;font:inherit;font-weight:700;padding:.6rem 1.2rem;cursor:pointer;border-radius:0}
+button.alt{background:transparent;color:var(--fg);border:1px solid var(--fg)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--ok);outline-offset:3px}
+.msg{min-height:1.7em;margin-top:.8rem;color:var(--dim)}
+.solved .row{display:none}
+.solved .msg{color:var(--ok)}
+.cur::after{content:"_";animation:b 1s steps(1) infinite}
+@keyframes b{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cur::after,body::before{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Listen.</h1>
+<p id="intro" data-t="Seventeen years in the dark, and then a sound. Four doors stand between you and the surface. Nothing here is random."></p>
+
+<section class="stage" id="s0">
+<p>Reverse the alphabet. A becomes Z, and Z becomes A.</p>
+<pre>GSV DLIW RH MLXGFIMZO</pre>
+<form class="row" autocomplete="off"><input aria-label="Answer" placeholder="one word" spellcheck="false"><button>Open</button></form>
+<div class="msg" role="status"></div>
+</section>
+
+<section class="stage" id="s1" hidden>
+<p>This one is meant to be heard. Dots are short, dashes are long.</p>
+<pre>-- --- .-.. -</pre>
+<div class="row"><button type="button" class="alt" id="play">Play</button></div>
+<form class="row" autocomplete="off"><input aria-label="Answer" placeholder="one word" spellcheck="false"><button>Open</button></form>
+<div class="msg" role="status"></div>
+</section>
+
+<section class="stage" id="s2" hidden>
+<p>The male cicada sings with a drum-like organ. Count the alphabet to learn its name.</p>
+<pre>20 25 13 2 1 12</pre>
+<form class="row" autocomplete="off"><input aria-label="Answer" placeholder="one word" spellcheck="false"><button>Open</button></form>
+<div class="msg" role="status"></div>
+</section>
+
+<section class="stage" id="s3" hidden>
+<p>Take the first letter of each word you found, in order. Then add the number of years it sleeps.</p>
+<form class="row" autocomplete="off"><input aria-label="Answer" placeholder="letters and a number" spellcheck="false"><button>Open</button></form>
+<div class="msg" role="status"></div>
+</section>
+
+<section class="stage" id="end" hidden>
+<p>You surfaced.</p>
+<p>There is no prize. There was only the question, and you answered it.</p>
+<p class="dim">Now build a door of your own.</p>
+</section>
+</main>
+<script>
+(function(){
+var H=["18d8c823b425f727db6439465e746c4752dda64d7b16c950f3cf6a83037e5014","e264730df0dd0c6523f58001b0af60cc98c6eee22697d35a03921db56df85f8d","f205afaa28c8fa690c1029275e94b6f6d0b5cd603124f3bf970a2d4b948cce0d","14f76b94bccc0af8017bbf6cc106e2a18505083a475bd351d1e448be258198a7"];
+var stages=["s0","s1","s2","s3"],KEY="cicada2_progress";
+var rm=matchMedia("(prefers-reduced-motion:reduce)").matches;
+function sha(s){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")})}
+function load(){try{return parseInt(localStorage.getItem(KEY),10)||0}catch(e){return 0}}
+function save(n){try{localStorage.setItem(KEY,String(n))}catch(e){}}
+function solve(i,quiet){
+  var el=document.getElementById(stages[i]);
+  el.classList.add("solved");
+  el.querySelector(".msg").textContent="Door open.";
+  var next=document.getElementById(i<3?stages[i+1]:"end");next.hidden=false;
+  if(!quiet){save(i+1);next.scrollIntoView({behavior:rm?"auto":"smooth",block:"start"})}
+}
+stages.forEach(function(id,i){
+  var el=document.getElementById(id),f=el.querySelector("form"),m=el.querySelector(".msg"),inp=el.querySelector("input");
+  f.addEventListener("submit",function(e){
+    e.preventDefault();
+    var v=inp.value.trim().toLowerCase().replace(/\s+/g," ");
+    if(!v)return;
+    sha(v).then(function(h){if(h===H[i]){solve(i,false)}else{m.textContent="No match. Look again.";inp.select()}});
+  });
+});
+document.getElementById("play").addEventListener("click",function(){
+  try{
+    var C=new(window.AudioContext||window.webkitAudioContext)(),t=C.currentTime+.1,u=.09;
+    "-- --- .-.. -".split("").forEach(function(c){
+      if(c==="."||c==="-"){
+        var o=C.createOscillator(),g=C.createGain(),d=c==="."?u:u*3;
+        o.frequency.value=620;o.connect(g);g.connect(C.destination);g.gain.value=.15;
+        o.start(t);o.stop(t+d);t+=d+u;
+      }else{t+=u*2}
+    });
+  }catch(e){}
+});
+var p=load();
+for(var i=0;i<p&&i<4;i++)solve(i,true);
+var intro=document.getElementById("intro"),txt=intro.dataset.t;
+if(rm||p>0){intro.textContent=txt}
+else{intro.classList.add("cur");var k=0;(function t(){intro.textContent=txt.slice(0,k++);if(k<=txt.length){setTimeout(t,28)}else{intro.classList.remove("cur")}})()}
+})();
+</script>
+</body>
+</html>
